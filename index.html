@@ -16,7 +16,8 @@ html,body{height:100%;width:100%;background:#070F1E;color:#E8F0FF;font-family:-a
 #app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto}
 
 /* ── LOGIN ── */
-#login-screen{position:fixed;inset:0;background:#070F1E;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:60px 24px 40px;max-width:480px;left:50%;transform:translateX(-50%);overflow-y:auto}
+#login-screen{position:fixed;inset:0;background:#070F1E;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:60px 24px 40px;overflow-y:auto}
+#login-inner{width:100%;max-width:420px}
 #login-screen.hidden{display:none}
 .login-logo{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#6BAEFF;margin-bottom:8px;text-align:center}
 .login-title{font-size:32px;font-weight:800;margin-bottom:6px;text-align:center}
@@ -144,6 +145,7 @@ textarea{resize:none;height:64px}
 
 <!-- ══ LOGIN ══════════════════════════════════════════════════════ -->
 <div id="login-screen">
+<div id="login-inner">
   <div class="login-logo">KÖRLOGG</div>
   <div class="login-title">Välkommen</div>
   <div class="login-sub">Välj ditt konto eller skapa ett nytt</div>
@@ -164,6 +166,7 @@ textarea{resize:none;height:64px}
     <div class="sync-status" id="login-sync-status"></div>
     <button class="btn btn-ghost btn-sm" onclick="loginWithCode()" style="margin-top:10px">Importera data</button>
   </div>
+</div><!-- /login-inner -->
 </div>
 
 <!-- ══ APP ════════════════════════════════════════════════════════ -->
@@ -287,6 +290,23 @@ textarea{resize:none;height:64px}
 <div id="toast"></div>
 
 <script>
+// ══ WAKE LOCK ═════════════════════════════════════════════════════
+var wakeLock = null;
+async function requestWakeLock(){
+  if(!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', function(){wakeLock=null;});
+  } catch(e){}
+}
+function releaseWakeLock(){
+  if(wakeLock){wakeLock.release();wakeLock=null;}
+}
+// Re-acquire wake lock if screen wakes up mid-drive
+document.addEventListener('visibilitychange', function(){
+  if(S.driving && document.visibilityState==='visible') requestWakeLock();
+});
+
 // ══ HELPERS ═══════════════════════════════════════════════════════
 var COLORS=['#2E86FF','#00D68F','#FF3D71','#FFAA00','#A855F7','#EC4899','#14B8A6','#F97316'];
 function aColor(id){var h=0;for(var i=0;i<id.length;i++)h=(h*31+id.charCodeAt(i))&0xFFFF;return COLORS[h%COLORS.length];}
@@ -555,11 +575,13 @@ function startDrive(){
     {enableHighAccuracy:true,maximumAge:2000,timeout:15000}
   );
   S.timer=setInterval(function(){S.secs++;document.getElementById('timer').textContent=fmtTime(S.secs);},1000);
+  requestWakeLock();
   toast('Körning startad! 🚗');
 }
 
 function stopDrive(){
   navigator.geolocation.clearWatch(S.wid);clearInterval(S.timer);S.driving=false;
+  releaseWakeLock();
   document.getElementById('sum-odo-start').textContent=(S.odo0||0).toLocaleString('sv-SE')+' km';
   document.getElementById('sum-odo-end').textContent=(S.odo0+S.dist).toFixed(1)+' km';
   document.getElementById('sum-dist').textContent=S.dist.toFixed(2)+' km';
@@ -593,6 +615,7 @@ function cancelStop(){
   document.getElementById('main-btn').classList.add('stop');
   document.getElementById('status-badge').classList.add('active');
   document.getElementById('status-txt').textContent='KÖRNING PÅGÅR';
+  requestWakeLock();
 }
 
 function saveTrip(){
