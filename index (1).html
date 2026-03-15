@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="sv" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Körlogg">
+<meta name="theme-color" content="#F8F9FB" id="theme-color-meta">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<title>Körlogg</title>
+<style>
+:root{--bg:#F8F9FB;--surface:#FFFFFF;--surface2:#F1F3F7;--border:#E4E7EF;--border2:#CDD1DC;--text:#0F172A;--text2:#4B5775;--text3:#8E98AE;--accent:#2563EB;--accent-bg:#EEF3FD;--accent2:#1D4ED8;--green:#16A34A;--green-bg:#DCFCE7;--amber:#B45309;--amber-bg:#FEF3C7;--red:#DC2626;--red-bg:#FEE2E2;--radius:14px;--radius-sm:8px;--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 12px rgba(0,0,0,.08)}
+[data-theme="dark"]{--bg:#0D1117;--surface:#161B27;--surface2:#1E2535;--border:#252D3F;--border2:#2E3A52;--text:#EDF0F7;--text2:#8A95AD;--text3:#4E5A70;--accent:#4B84F0;--accent-bg:#1A2540;--accent2:#6B9BF5;--green:#22C55E;--green-bg:#0F2E1C;--amber:#F59E0B;--amber-bg:#2D2008;--red:#F87171;--red-bg:#2D0F0F;--shadow:0 1px 3px rgba(0,0,0,.3);--shadow-md:0 4px 16px rgba(0,0,0,.4)}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{display:none}
+input,select,textarea,button{font-family:'Outfit',sans-serif;-webkit-appearance:none}
+#app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;padding:0 20px 32px;overflow-y:auto}
+#login-screen.hidden{display:none}
+#login-inner{width:100%;max-width:400px;padding-top:64px}
+.login-wordmark{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.login-title{font-size:30px;font-weight:800;color:var(--text);line-height:1.1}
+.login-sub{font-size:14px;color:var(--text2);margin-top:6px;margin-bottom:36px}
+.login-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px;box-shadow:var(--shadow)}
+.login-section h3{font-size:12px;font-weight:700;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
+.user-row{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;cursor:pointer;margin-bottom:6px;border:1px solid var(--border);background:var(--surface2);transition:border-color .15s}
+.user-row:active{border-color:var(--accent);background:var(--accent-bg)}
+.avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0}
+.user-info-name{font-size:15px;font-weight:600;color:var(--text)}
+.user-info-meta{font-size:12px;color:var(--text3);margin-top:1px}
+.user-del{background:var(--red-bg);border:none;border-radius:var(--radius-sm);padding:7px;cursor:pointer;color:var(--red);margin-left:auto;flex-shrink:0;display:flex;align-items:center}
+.divider{display:flex;align-items:center;gap:10px;color:var(--text3);font-size:12px;font-weight:500;margin:14px 0;width:100%}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.sync-status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);margin-top:8px;min-height:18px}
+
+/* DOTS */
+.dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.dot.green{background:var(--green);box-shadow:0 0 0 3px var(--green-bg)}
+.dot.red{background:var(--red)}
+.dot.amber{background:var(--amber);animation:blink .9s ease-in-out infinite alternate}
+@keyframes blink{to{opacity:.3}}
+
+/* HEADER */
+.header{padding:52px 20px 14px;flex-shrink:0;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--border)}
+.header-wordmark{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:3px}
+.header-title{font-size:24px;font-weight:800;color:var(--text)}
+.header-actions{display:flex;align-items:center;gap:8px}
+.icon-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface);cursor:pointer;color:var(--text2);transition:background .15s}
+.icon-btn:active{background:var(--surface2)}
+.user-btn{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 12px 5px 6px;cursor:pointer;transition:border-color .15s}
+.user-btn:active{border-color:var(--accent)}
+.user-btn-name{font-size:13px;font-weight:600;color:var(--text2);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:16px 16px 20px;-webkit-overflow-scrolling:touch}
+.tab{display:none}.tab.active{display:block}
+
+/* NAV */
+.nav{display:flex;background:var(--surface);border-top:1px solid var(--border);padding:8px 0 max(10px,env(safe-area-inset-bottom));flex-shrink:0}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:5px 0;background:none;border:none;color:var(--text3);font-size:11px;font-weight:600;cursor:pointer;letter-spacing:.02em;transition:color .15s}
+.nav-btn.active{color:var(--accent)}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;box-shadow:var(--shadow)}
+.field-label{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;margin-top:14px}
+.field-label:first-child{margin-top:0}
+input,select,textarea{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:11px 13px;font-size:15px;color:var(--text);outline:none;display:block;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:none;height:64px}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238E98AE' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.section-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;margin-top:4px}
+
+/* BUTTONS */
+.btn{width:100%;padding:13px;border-radius:var(--radius-sm);border:none;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px;display:block;color:#fff;background:var(--accent);letter-spacing:.01em;transition:opacity .15s}
+.btn:active{opacity:.85}
+.btn-ghost{background:transparent;color:var(--text2);border:1.5px solid var(--border)}
+.btn-ghost:active{background:var(--surface2)}
+.btn-danger{background:var(--red)}
+.btn-sm{padding:10px;font-size:13px}
+
+/* GPS BAR */
+.gps-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;font-size:13px;color:var(--text2);box-shadow:var(--shadow)}
+
+/* CHIPS */
+.chips{display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;padding-bottom:4px}
+.chip{flex-shrink:0;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;cursor:pointer;min-width:140px;box-shadow:var(--shadow);transition:border-color .15s,background .15s}
+.chip.selected{background:var(--accent-bg);border-color:var(--accent)}
+.chip-reg{font-size:14px;font-weight:700;letter-spacing:.12em;color:var(--text)}
+.chip-model{font-size:12px;color:var(--text2);margin-top:3px}
+.chip-odo{font-size:11px;color:var(--accent);margin-top:5px;font-weight:600}
+
+/* DRIVE CARD */
+.drive-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px 20px;margin-bottom:14px;text-align:center;box-shadow:var(--shadow-md)}
+.status-badge{display:inline-flex;align-items:center;gap:7px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:20px}
+.status-badge.active{background:var(--green-bg);border-color:rgba(22,163,74,.25);color:var(--green)}
+.status-badge.active .dot{background:var(--green);box-shadow:none}
+.km-display{font-size:64px;font-weight:300;line-height:1;letter-spacing:-3px;color:var(--text);font-variant-numeric:tabular-nums}
+.km-unit{font-size:22px;font-weight:400;color:var(--text3);letter-spacing:0}
+.timer{font-size:20px;font-weight:500;color:var(--accent);margin-top:10px;letter-spacing:.08em;font-variant-numeric:tabular-nums}
+.drive-hint{font-size:13px;color:var(--text3);margin-top:10px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:16px}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center}
+.stat-val{font-size:16px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.stat-lbl{font-size:10px;font-weight:600;color:var(--text3);margin-top:2px;letter-spacing:.06em;text-transform:uppercase}
+
+/* MAIN BUTTON */
+.main-btn{width:110px;height:110px;border-radius:50%;border:none;margin:24px auto 0;display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--accent);color:#fff;box-shadow:0 4px 20px rgba(37,99,235,.3);transition:transform .12s,box-shadow .12s}
+.main-btn:active{transform:scale(.95);box-shadow:0 2px 10px rgba(37,99,235,.2)}
+.main-btn.stop{background:var(--red);box-shadow:0 4px 20px rgba(220,38,38,.28)}
+.main-btn.stop:active{box-shadow:0 2px 10px rgba(220,38,38,.18)}
+
+/* VEHICLES */
+.vehicle-row{display:flex;align-items:flex-start;gap:14px}
+.vehicle-icon{width:44px;height:44px;background:var(--accent-bg);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent)}
+.vehicle-reg{font-size:17px;font-weight:700;letter-spacing:.1em;color:var(--text)}
+.vehicle-sub{font-size:13px;color:var(--text2);margin-top:2px}
+.vehicle-meta{font-size:12px;color:var(--text3);margin-top:6px}
+.del-btn{background:var(--red-bg);border:none;border-radius:var(--radius-sm);padding:9px;cursor:pointer;color:var(--red);flex-shrink:0;display:flex;align-items:center}
+.empty{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-icon{margin-bottom:14px;opacity:.5}
+
+/* LOGS */
+.log-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.log-date{font-size:12px;color:var(--text3);font-weight:500}
+.log-dist{font-size:15px;font-weight:700;color:var(--text)}
+.log-route{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:14px;color:var(--text)}
+.log-tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{border-radius:6px;padding:3px 9px;font-size:11px;font-weight:600}
+.filter-row{display:flex;gap:6px;margin-bottom:14px}
+.filter-chip{background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:7px 14px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .15s}
+.filter-chip.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}
+.export-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px;box-shadow:var(--shadow);transition:border-color .15s,color .15s}
+.export-btn:active{border-color:var(--accent);color:var(--accent)}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:20px 20px 36px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;box-shadow:0 -4px 30px rgba(0,0,0,.12)}
+.modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 20px}
+.modal-title{font-size:20px;font-weight:800;margin-bottom:3px;color:var(--text)}
+.modal-sub{font-size:13px;color:var(--text2);margin-bottom:20px}
+.summary-grid{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin:16px 0;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.summary-lbl{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.summary-val{font-size:15px;font-weight:600;color:var(--text);margin-top:3px;font-variant-numeric:tabular-nums}
+.user-modal-row{display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;cursor:pointer;margin-bottom:8px;border:1.5px solid var(--border);background:var(--surface2)}
+.user-modal-row.current{background:var(--accent-bg);border-color:var(--accent)}
+.code-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-family:monospace;font-size:11px;color:var(--text2);word-break:break-all;cursor:pointer;transition:border-color .15s}
+.copy-btn{width:100%;margin-top:8px;padding:10px;background:var(--accent-bg);border:1px solid rgba(37,99,235,.2);border-radius:var(--radius-sm);color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-family:'Outfit',sans-serif}
+
+/* TOAST */
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--text);color:var(--bg);border-radius:20px;padding:10px 20px;font-size:13px;font-weight:600;white-space:nowrap;z-index:400;opacity:0;transition:all .25s;pointer-events:none;box-shadow:var(--shadow-md)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.save-indicator{font-size:11px;color:var(--green);margin-top:6px;text-align:center;opacity:0;transition:opacity .3s;font-weight:600}
+.save-indicator.show{opacity:1}
+</style>
+</head>
+<body>
+
+<svg style="display:none">
+  <defs>
+    <symbol id="ic-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5,3 19,12 5,21" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="ic-stop" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" fill="currentColor"/></symbol>
+    <symbol id="ic-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3v-5l2-5h14l2 5v5h-2"/><rect x="7" y="17" width="3" height="2" rx="1"/><rect x="14" y="17" width="3" height="2" rx="1"/><path d="M7 12h10"/></symbol>
+    <symbol id="ic-log" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+    <symbol id="ic-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></symbol>
+    <symbol id="ic-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></symbol>
+    <symbol id="ic-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="ic-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+    <symbol id="ic-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+    <symbol id="ic-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></symbol>
+    <symbol id="ic-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></symbol>
+    <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20,6 9,17 4,12"/></symbol>
+    <symbol id="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></symbol>
+  </defs>
+</svg>
+
+<div id="login-screen">
+<div id="login-inner">
+  <div class="login-wordmark">Körlogg</div>
+  <div class="login-title">Välkommen</div>
+  <div class="login-sub">Välj ditt konto eller skapa ett nytt</div>
+  <div class="login-section" id="existing-users-section">
+    <h3>Konton på den här enheten</h3>
+    <div id="login-user-list"></div>
+  </div>
+  <div class="login-section">
+    <h3>Nytt konto</h3>
+    <label class="field-label" style="margin-top:0">Namn</label>
+    <input id="new-user-name" placeholder="T.ex. Anna Karlsson" maxlength="40">
+    <button class="btn" onclick="createUser()" style="margin-top:12px">Skapa konto</button>
+    <div class="divider">eller importera från annan enhet</div>
+    <label class="field-label" style="margin-top:0">Exportkod</label>
+    <input id="sync-code-input" placeholder="Klistra in din exportkod" style="font-family:monospace;font-size:11px">
+    <div class="sync-status" id="login-sync-status"></div>
+    <button class="btn btn-ghost btn-sm" onclick="loginWithCode()" style="margin-top:10px">Importera data</button>
+  </div>
+</div>
+</div>
+
+<div id="app">
+  <div class="header">
+    <div>
+      <div class="header-wordmark">Körlogg</div>
+      <div class="header-title" id="page-title">Körning</div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="Byt tema">
+        <svg width="18" height="18"><use href="#ic-moon" id="theme-icon"/></svg>
+      </button>
+      <button class="user-btn" onclick="openUserModal()">
+        <div class="avatar" id="hdr-avatar" style="width:26px;height:26px;font-size:11px"></div>
+        <span class="user-btn-name" id="hdr-name"></span>
+      </button>
+    </div>
+  </div>
+
+  <div id="tab-drive" class="content tab active">
+    <div class="gps-bar"><div class="dot" id="gps-dot"></div><span id="gps-txt">GPS aktiveras vid start</span></div>
+    <div class="section-label">Fordon</div>
+    <div class="chips" id="chips"></div>
+    <div class="drive-card">
+      <div class="status-badge" id="status-badge"><div class="dot" style="margin-right:2px"></div><span id="status-txt">Redo</span></div>
+      <div class="km-display" id="km-val">0.00<span class="km-unit"> km</span></div>
+      <div class="timer" id="timer" style="display:none">00:00:00</div>
+      <div class="drive-hint" id="drive-hint">Tryck start för att börja körningen</div>
+      <div class="stats-grid" id="stats-grid" style="display:none">
+        <div class="stat-box"><div class="stat-val" id="s-spd">0</div><div class="stat-lbl">km/h</div></div>
+        <div class="stat-box"><div class="stat-val" id="s-pts">0</div><div class="stat-lbl">GPS-pkt</div></div>
+        <div class="stat-box"><div class="stat-val" id="s-acc">—</div><div class="stat-lbl">Noggr. m</div></div>
+      </div>
+      <button class="main-btn" id="main-btn" onclick="toggleDrive()">
+        <svg width="28" height="28"><use href="#ic-play" id="main-btn-icon"/></svg>
+      </button>
+    </div>
+    <div class="save-indicator" id="save-indicator">
+      <svg width="12" height="12" style="vertical-align:middle;margin-right:3px"><use href="#ic-check"/></svg>
+      Sparad lokalt
+    </div>
+  </div>
+
+  <div id="tab-vehicles" class="content tab">
+    <div id="vehicles-list"></div>
+    <button class="btn" id="add-vehicle-btn" onclick="showAddVehicle()" style="display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg width="16" height="16"><use href="#ic-plus"/></svg> Lägg till fordon
+    </button>
+    <div id="add-vehicle-form" style="display:none">
+      <div class="card" style="margin-top:12px">
+        <div style="font-size:17px;font-weight:800;margin-bottom:16px;color:var(--text)">Nytt fordon</div>
+        <div class="grid2">
+          <div><label class="field-label">Reg.nr *</label><input id="v-reg" placeholder="ABC 123" style="text-transform:uppercase;letter-spacing:.12em;font-weight:700"></div>
+          <div><label class="field-label">Fordonstyp</label><select id="v-type"><option>Personbil</option><option>Lätt lastbil</option><option>Tung lastbil</option><option>Buss</option><option>Motorcykel</option></select></div>
+        </div>
+        <div class="grid2">
+          <div><label class="field-label">Märke *</label><input id="v-make" placeholder="Volvo"></div>
+          <div><label class="field-label">Modell *</label><input id="v-model" placeholder="XC60"></div>
+        </div>
+        <div class="grid2">
+          <div><label class="field-label">Årsmodell</label><input id="v-year" type="number" placeholder="2022"></div>
+          <div><label class="field-label">Bränsle</label><select id="v-fuel"><option>Bensin</option><option>Diesel</option><option>El</option><option>Hybrid</option><option>Gas</option></select></div>
+        </div>
+        <label class="field-label">Mätarställning (km) *</label>
+        <input id="v-odo" type="number" placeholder="85000">
+        <div style="font-size:11px;color:var(--text3);margin-top:5px">Uppdateras automatiskt efter varje körning</div>
+        <label class="field-label">Ägare / Företag</label>
+        <input id="v-owner" placeholder="Företagets namn">
+        <button class="btn" onclick="addVehicle()" style="margin-top:16px">Spara fordon</button>
+        <button class="btn btn-ghost" onclick="hideAddVehicle()">Avbryt</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-logs" class="content tab">
+    <button class="export-btn" onclick="exportCSV()">
+      <svg width="16" height="16"><use href="#ic-download"/></svg> Exportera CSV (Skatteverket)
+    </button>
+    <div class="filter-row">
+      <div class="filter-chip active" onclick="setFilter('all',this)">Alla</div>
+      <div class="filter-chip" onclick="setFilter('business',this)">Tjänst</div>
+      <div class="filter-chip" onclick="setFilter('private',this)">Privat</div>
+    </div>
+    <div id="logs-list"></div>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-btn active" id="nav-drive" onclick="switchTab('drive')">
+      <svg width="22" height="22"><use href="#ic-play"/></svg>Körning
+    </button>
+    <button class="nav-btn" id="nav-vehicles" onclick="switchTab('vehicles')">
+      <svg width="22" height="22"><use href="#ic-car"/></svg>Fordon
+    </button>
+    <button class="nav-btn" id="nav-logs" onclick="switchTab('logs')">
+      <svg width="22" height="22"><use href="#ic-log"/></svg>Körlogg
+    </button>
+  </nav>
+</div>
+
+<div class="modal-bg" id="stop-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Avsluta körning</div>
+    <div class="modal-sub">Uppgifter som krävs av Skatteverket</div>
+    <label class="field-label">Startplats *</label><input id="m-from" placeholder="Varifrån körde du?">
+    <label class="field-label">Destination *</label><input id="m-to" placeholder="Vart körde du?">
+    <label class="field-label">Ändamål *</label>
+    <select id="m-purpose"><option value="">Välj ändamål...</option><option value="business">Tjänstekörning</option><option value="private">Privat körning</option></select>
+    <label class="field-label">Ärendebeskrivning</label>
+    <textarea id="m-detail" placeholder="T.ex. kundmöte, lagerbesök..."></textarea>
+    <label class="field-label">Antal passagerare</label>
+    <input id="m-pass" type="number" placeholder="0" min="0">
+    <div class="summary-grid">
+      <div><div class="summary-lbl">Startmätare</div><div class="summary-val" id="sum-odo-start">—</div></div>
+      <div><div class="summary-lbl">Slutmätare</div><div class="summary-val" id="sum-odo-end">—</div></div>
+      <div><div class="summary-lbl">Distans</div><div class="summary-val" id="sum-dist">—</div></div>
+      <div><div class="summary-lbl">Tid</div><div class="summary-val" id="sum-time">—</div></div>
+    </div>
+    <button class="btn" onclick="saveTrip()">Spara körning</button>
+    <button class="btn btn-ghost" onclick="cancelStop()">Avbryt — fortsätt körning</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="user-modal" style="display:none">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Konto</div>
+    <div class="modal-sub" id="um-sub"></div>
+    <div id="um-sync-box" style="margin-bottom:16px"></div>
+    <div id="um-user-list"></div>
+    <button class="btn btn-ghost" onclick="document.getElementById('user-modal').style.display='none'">Stäng</button>
+    <button class="btn btn-danger" style="margin-top:8px" onclick="logout()">Byt konto / Logga ut</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var currentTheme=localStorage.getItem('kl2_theme')||'light';
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  document.getElementById('theme-color-meta').content=t==='dark'?'#0D1117':'#F8F9FB';
+  document.getElementById('theme-icon').setAttribute('href',t==='dark'?'#ic-sun':'#ic-moon');
+  currentTheme=t;localStorage.setItem('kl2_theme',t);
+}
+function toggleTheme(){applyTheme(currentTheme==='dark'?'light':'dark');}
+applyTheme(currentTheme);
+
+var wakeLock=null;
+async function requestWakeLock(){if(!('wakeLock' in navigator))return;try{wakeLock=await navigator.wakeLock.request('screen');wakeLock.addEventListener('release',function(){wakeLock=null;});}catch(e){}}
+function releaseWakeLock(){if(wakeLock){wakeLock.release();wakeLock=null;}}
+document.addEventListener('visibilitychange',function(){if(S.driving&&document.visibilityState==='visible')requestWakeLock();});
+
+var COLORS=['#2563EB','#059669','#DC2626','#D97706','#7C3AED','#DB2777','#0891B2','#EA580C'];
+function aColor(id){var h=0;for(var i=0;i<id.length;i++)h=(h*31+id.charCodeAt(i))&0xFFFF;return COLORS[h%COLORS.length];}
+function aInit(name){return name.trim().split(/\s+/).map(function(w){return w[0];}).join('').toUpperCase().slice(0,2)||'?';}
+
+function getLocalUsers(){try{return JSON.parse(localStorage.getItem('kl2_users')||'[]');}catch(e){return[];}}
+function saveLocalUsers(u){localStorage.setItem('kl2_users',JSON.stringify(u));}
+function getLastUser(){return localStorage.getItem('kl2_lastUser')||null;}
+function setLastUser(id){localStorage.setItem('kl2_lastUser',id);}
+function loadUserData(uid){try{return JSON.parse(localStorage.getItem('kl2_data_'+uid)||'null');}catch(e){return null;}}
+function saveUserData(uid,data){localStorage.setItem('kl2_data_'+uid,JSON.stringify(data));}
+function generateExportCode(data){try{return btoa(encodeURIComponent(JSON.stringify(data)));}catch(e){return null;}}
+function parseExportCode(code){try{return JSON.parse(decodeURIComponent(atob(code.trim())));}catch(e){return null;}}
+
+var S={uid:null,name:'',vehicles:[],trips:[],selId:null,driving:false,wid:null,timer:null,t0:null,odo0:0,dist:0,secs:0,lp:null,filter:'all',gpsCount:0,startPos:null,endPos:null,startAddr:null};
+
+function doSave(){
+  if(!S.uid)return;
+  var p={name:S.name,vehicles:S.vehicles,trips:S.trips,selId:S.selId,savedAt:Date.now()};
+  saveUserData(S.uid,p);
+  var u=getLocalUsers().find(function(x){return x.uid===S.uid;});
+  if(u){u.name=S.name;saveLocalUsers(getLocalUsers().map(function(x){return x.uid===S.uid?u:x;}));}
+  var el=document.getElementById('save-indicator');
+  if(el){el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2000);}
+}
+var saveTimer=null;
+function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(function(){doSave();},800);}
+window.addEventListener('pagehide',function(){doSave();});
+window.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')doSave();});
+setInterval(function(){if(S.driving)doSave();},30000);
+
+function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},3000);}
+
+function renderLoginScreen(){
+  var users=getLocalUsers();
+  var sec=document.getElementById('existing-users-section');
+  var el=document.getElementById('login-user-list');
+  if(!users.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  el.innerHTML=users.map(function(u){
+    return '<div class="user-row" onclick="loginWithId(\''+u.uid+'\',\''+u.name+'\')"><div class="avatar" style="width:40px;height:40px;font-size:13px;background:'+aColor(u.uid)+'">'+aInit(u.name)+'</div><div><div class="user-info-name">'+u.name+'</div><div class="user-info-meta">Sparad lokalt</div></div><button class="user-del" onclick="removeLocal(event,\''+u.uid+'\')"><svg width="15" height="15"><use href="#ic-trash"/></svg></button></div>';
+  }).join('');
+}
+function removeLocal(e,uid){e.stopPropagation();if(!confirm('Ta bort kontot från den här enheten?'))return;saveLocalUsers(getLocalUsers().filter(function(u){return u.uid!==uid;}));renderLoginScreen();toast('Konto borttaget');}
+function createUser(){var name=document.getElementById('new-user-name').value.trim();if(!name){toast('Ange ditt namn');return;}var uid='u'+Date.now();var p={name:name,vehicles:[],trips:[],selId:null,savedAt:Date.now()};saveUserData(uid,p);var users=getLocalUsers();users.push({uid:uid,name:name});saveLocalUsers(users);document.getElementById('new-user-name').value='';startSession(uid,name,p);}
+function loginWithCode(){var code=document.getElementById('sync-code-input').value.trim();if(!code){toast('Ange exportkod');return;}setSyncStatus('login-sync-status','loading','Läser exportkod...');var data=parseExportCode(code);if(!data||!data.name){setSyncStatus('login-sync-status','err','Ogiltig exportkod');return;}var uid=data.uid||('u'+Date.now()),name=data.name||'Användare';var users=getLocalUsers();if(!users.find(function(u){return u.uid===uid;})){users.push({uid:uid,name:name});saveLocalUsers(users);}saveUserData(uid,data);document.getElementById('sync-code-input').value='';setSyncStatus('login-sync-status','ok','Importerad!');startSession(uid,name,data);}
+function loginWithId(uid,name){var data=loadUserData(uid);if(!data)data={name:name,vehicles:[],trips:[],selId:null};startSession(uid,name,data);}
+function setSyncStatus(elId,status,msg){var el=document.getElementById(elId);if(!el)return;var c=status==='ok'?' green':status==='err'?' red':status==='loading'?' amber':'';el.innerHTML='<div class="dot'+c+'"></div><span style="margin-left:6px">'+msg+'</span>';}
+
+function startSession(uid,name,data){
+  S.uid=uid;S.name=name;S.vehicles=data.vehicles||[];S.trips=data.trips||[];
+  S.selId=data.selId||(S.vehicles.length?S.vehicles[0].id:null);
+  S.dist=0;S.secs=0;S.driving=false;S.filter='all';
+  setLastUser(uid);
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('hdr-avatar').style.background=aColor(uid);
+  document.getElementById('hdr-avatar').textContent=aInit(name);
+  document.getElementById('hdr-name').textContent=name;
+  renderChips();renderVehicles();renderLogs();resetDriveUI();
+  toast(S.trips.length?'Hej '+name.split(' ')[0]+'! '+S.trips.length+' körningar laddade':'Välkommen, '+name.split(' ')[0]+'!');
+}
+
+function openUserModal(){
+  document.getElementById('um-sub').textContent='Inloggad som '+S.name;
+  var p={uid:S.uid,name:S.name,vehicles:S.vehicles,trips:S.trips,selId:S.selId,savedAt:Date.now()};
+  var code=generateExportCode(p)||'';
+  document.getElementById('um-sync-box').innerHTML=
+    '<div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Exportkod — flytta data till annan enhet</div>'
+    +'<div class="code-box" onclick="copyCode()">'+code.slice(0,40)+'...</div>'
+    +'<button class="copy-btn" onclick="copyCode()"><svg width="14" height="14"><use href="#ic-copy"/></svg> Kopiera exportkod</button>'
+    +'<div style="font-size:11px;color:var(--text3);margin-top:7px">Klistra in koden på en annan enhet för att importera din data.</div>';
+  document.getElementById('um-user-list').innerHTML=getLocalUsers().map(function(u){
+    return '<div class="user-modal-row'+(u.uid===S.uid?' current':'')+'" onclick="switchToUser(\''+u.uid+'\',\''+u.name+'\')"><div class="avatar" style="width:36px;height:36px;font-size:12px;background:'+aColor(u.uid)+'">'+aInit(u.name)+'</div><div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--text)">'+u.name+'</div></div>'+(u.uid===S.uid?'<svg width="18" height="18" style="color:var(--accent)"><use href="#ic-check"/></svg>':'')+'</div>';
+  }).join('');
+  document.getElementById('user-modal').style.display='flex';
+}
+function copyCode(){var p={uid:S.uid,name:S.name,vehicles:S.vehicles,trips:S.trips,selId:S.selId,savedAt:Date.now()};var code=generateExportCode(p)||'';if(navigator.clipboard){navigator.clipboard.writeText(code);toast('Exportkod kopierad');}else{toast('Kopiera koden manuellt');}}
+function switchToUser(uid,name){if(uid===S.uid){document.getElementById('user-modal').style.display='none';return;}doSave();document.getElementById('user-modal').style.display='none';loginWithId(uid,name);}
+function logout(){doSave();document.getElementById('user-modal').style.display='none';document.getElementById('login-screen').classList.remove('hidden');renderLoginScreen();}
+
+function switchTab(t){['drive','vehicles','logs'].forEach(function(id){document.getElementById('tab-'+id).classList.toggle('active',id===t);document.getElementById('nav-'+id).classList.toggle('active',id===t);});document.getElementById('page-title').textContent={drive:'Körning',vehicles:'Fordon',logs:'Körlogg'}[t];}
+
+function setGPS(txt,cls){document.getElementById('gps-txt').textContent=txt;document.getElementById('gps-dot').className='dot'+(cls?' '+cls:'');}
+function calcDist(a,b,c,d){var R=6371,dL=(c-a)*Math.PI/180,dl=(d-b)*Math.PI/180;var x=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dl/2)*Math.sin(dl/2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+function fmtTime(s){return String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor((s%3600)/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function reverseGeocode(lat,lon,cb){fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lon+'&addressdetails=1&accept-language=sv').then(function(r){return r.json();}).then(function(d){var a=d.address||{},parts=[];var street=a.road||a.pedestrian||a.path||'',number=a.house_number||'';var city=a.city||a.town||a.village||a.suburb||a.municipality||'';if(street&&number)parts.push(street+' '+number);else if(street)parts.push(street);if(city)parts.push(city);cb(parts.length?parts.join(', '):(d.display_name||'').split(',').slice(0,2).join(',').trim());}).catch(function(){cb('');});}
+
+function toggleDrive(){if(!S.driving)startDrive();else stopDrive();}
+function startDrive(){
+  if(!S.vehicles.length){toast('Lägg till fordon först');switchTab('vehicles');return;}
+  var v=S.vehicles.find(function(x){return x.id===S.selId;});
+  if(!v){toast('Välj ett fordon');return;}
+  if(!navigator.geolocation){toast('GPS saknas');return;}
+  S.dist=0;S.secs=0;S.lp=null;S.t0=new Date();S.odo0=v.odometer;
+  S.startPos=null;S.endPos=null;S.startAddr=null;S.gpsCount=0;S.driving=true;
+  var firstPos=true;
+  document.getElementById('main-btn').classList.add('stop');
+  document.getElementById('main-btn-icon').setAttribute('href','#ic-stop');
+  document.getElementById('status-badge').classList.add('active');
+  document.getElementById('status-txt').textContent='Pågår';
+  document.getElementById('drive-hint').style.display='none';
+  document.getElementById('timer').style.display='block';
+  document.getElementById('stats-grid').style.display='grid';
+  document.getElementById('km-val').innerHTML='0.00<span class="km-unit"> km</span>';
+  document.getElementById('s-pts').textContent='0';
+  S.wid=navigator.geolocation.watchPosition(
+    function(pos){var la=pos.coords.latitude,lo=pos.coords.longitude,ac=pos.coords.accuracy,spd=pos.coords.speed;setGPS('GPS aktiv — '+Math.round(ac)+' m',ac<40?'green':'amber');document.getElementById('s-acc').textContent=Math.round(ac);document.getElementById('s-spd').textContent=spd?Math.round(spd*3.6):0;if(ac<=60){if(firstPos){firstPos=false;S.startPos={lat:la,lon:lo};reverseGeocode(la,lo,function(a){S.startAddr=a;});}S.endPos={lat:la,lon:lo};if(S.lp){var d=calcDist(S.lp[0],S.lp[1],la,lo);if(d>0.005&&d<0.3){S.dist+=d;document.getElementById('km-val').innerHTML=S.dist.toFixed(2)+'<span class="km-unit"> km</span>';}}S.lp=[la,lo];S.gpsCount++;document.getElementById('s-pts').textContent=S.gpsCount;}},
+    function(){S.driving=false;clearInterval(S.timer);navigator.geolocation.clearWatch(S.wid);resetDriveUI();setGPS('GPS nekad — tillåt plats','red');toast('Tillåt plats för GPS');},
+    {enableHighAccuracy:true,maximumAge:2000,timeout:15000}
+  );
+  S.timer=setInterval(function(){S.secs++;document.getElementById('timer').textContent=fmtTime(S.secs);},1000);
+  requestWakeLock();toast('Körning startad');
+}
+function stopDrive(){
+  navigator.geolocation.clearWatch(S.wid);clearInterval(S.timer);S.driving=false;releaseWakeLock();
+  document.getElementById('sum-odo-start').textContent=(S.odo0||0).toLocaleString('sv-SE')+' km';
+  document.getElementById('sum-odo-end').textContent=(S.odo0+S.dist).toFixed(1)+' km';
+  document.getElementById('sum-dist').textContent=S.dist.toFixed(2)+' km';
+  document.getElementById('sum-time').textContent=fmtTime(S.secs);
+  document.getElementById('m-from').value=S.startAddr||'';
+  document.getElementById('m-to').value='';
+  document.getElementById('stop-modal').style.display='flex';
+  if(S.endPos){document.getElementById('m-to').value='Hämtar adress...';reverseGeocode(S.endPos.lat,S.endPos.lon,function(a){document.getElementById('m-to').value=a;});}
+  if(!S.startAddr&&S.startPos){document.getElementById('m-from').value='Hämtar adress...';reverseGeocode(S.startPos.lat,S.startPos.lon,function(a){S.startAddr=a;document.getElementById('m-from').value=a;});}
+}
+function cancelStop(){
+  document.getElementById('stop-modal').style.display='none';S.driving=true;
+  S.timer=setInterval(function(){S.secs++;document.getElementById('timer').textContent=fmtTime(S.secs);},1000);
+  S.wid=navigator.geolocation.watchPosition(function(pos){var la=pos.coords.latitude,lo=pos.coords.longitude,ac=pos.coords.accuracy,spd=pos.coords.speed;setGPS('GPS aktiv — '+Math.round(ac)+' m',ac<40?'green':'amber');document.getElementById('s-acc').textContent=Math.round(ac);document.getElementById('s-spd').textContent=spd?Math.round(spd*3.6):0;if(ac<=60){if(S.lp){var d=calcDist(S.lp[0],S.lp[1],la,lo);if(d>0.005&&d<0.3){S.dist+=d;document.getElementById('km-val').innerHTML=S.dist.toFixed(2)+'<span class="km-unit"> km</span>';}}S.lp=[la,lo];S.endPos={lat:la,lon:lo};S.gpsCount++;document.getElementById('s-pts').textContent=S.gpsCount;}},function(){},{enableHighAccuracy:true,maximumAge:2000,timeout:15000});
+  document.getElementById('main-btn').classList.add('stop');
+  document.getElementById('main-btn-icon').setAttribute('href','#ic-stop');
+  document.getElementById('status-badge').classList.add('active');
+  document.getElementById('status-txt').textContent='Pågår';
+  requestWakeLock();
+}
+function saveTrip(){
+  var from=document.getElementById('m-from').value.replace(/^Hämtar adress\.\.\./,'').trim()||'';
+  var to=document.getElementById('m-to').value.replace(/^Hämtar adress\.\.\./,'').trim()||'';
+  var purpose=document.getElementById('m-purpose').value;
+  var detail=document.getElementById('m-detail').value.trim();
+  var pass=document.getElementById('m-pass').value;
+  if(!from){toast('Ange startplats');return;}if(!to){toast('Ange destination');return;}if(!purpose){toast('Välj ändamål');return;}
+  var v=S.vehicles.find(function(x){return x.id===S.selId;});
+  var d=parseFloat(S.dist.toFixed(2)),odoEnd=parseFloat((S.odo0+d).toFixed(1));
+  var end=new Date();
+  var trip={id:Date.now().toString(),date:S.t0.toLocaleDateString('sv-SE'),startTime:S.t0.toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'}),endTime:end.toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'}),vehicleReg:v?v.reg:'—',vehicleMake:v?(v.make+' '+v.model):'—',driver:S.name,from:from,to:to,purpose:purpose,purposeDetail:detail,odoStart:S.odo0,odoEnd:odoEnd,distance:d,passengers:pass||'0'};
+  S.trips.unshift(trip);if(v)v.odometer=odoEnd;
+  document.getElementById('stop-modal').style.display='none';
+  ['m-from','m-to','m-detail','m-pass'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('m-purpose').value='';
+  resetDriveUI();renderChips();renderLogs();doSave();toast('Körning sparad — '+d+' km');
+}
+function resetDriveUI(){
+  document.getElementById('main-btn').classList.remove('stop');
+  document.getElementById('main-btn-icon').setAttribute('href','#ic-play');
+  document.getElementById('status-badge').classList.remove('active');
+  document.getElementById('status-txt').textContent='Redo';
+  document.getElementById('drive-hint').style.display='block';
+  document.getElementById('timer').style.display='none';
+  document.getElementById('stats-grid').style.display='none';
+  document.getElementById('km-val').innerHTML='0.00<span class="km-unit"> km</span>';
+  S.dist=0;S.secs=0;S.driving=false;
+}
+
+function renderChips(){var el=document.getElementById('chips');if(!S.vehicles.length){el.innerHTML='<div style="color:var(--text3);font-size:13px;padding:4px 0">Inga fordon — lägg till under Fordon</div>';return;}el.innerHTML=S.vehicles.map(function(v){return'<div class="chip'+(v.id===S.selId?' selected':'')+'" onclick="selectVehicle(\''+v.id+'\')" ><div class="chip-reg">'+v.reg+'</div><div class="chip-model">'+v.make+' '+v.model+'</div><div class="chip-odo">'+v.odometer.toLocaleString('sv-SE')+' km</div></div>';}).join('');}
+function selectVehicle(id){if(S.driving){toast('Kan ej byta under körning');return;}S.selId=id;renderChips();}
+
+function renderVehicles(){var el=document.getElementById('vehicles-list');if(!S.vehicles.length){el.innerHTML='<div class="empty"><div class="empty-icon"><svg width="44" height="44" style="color:var(--text3)"><use href="#ic-car"/></svg></div><div style="font-size:15px;font-weight:600">Inga fordon tillagda</div></div>';return;}el.innerHTML=S.vehicles.map(function(v){return'<div class="card"><div class="vehicle-row"><div class="vehicle-icon"><svg width="24" height="24"><use href="#ic-car"/></svg></div><div style="flex:1"><div class="vehicle-reg">'+v.reg+'</div><div class="vehicle-sub">'+v.make+' '+v.model+(v.year?' · '+v.year:'')+' · '+v.fuel+'</div><div class="vehicle-meta">Mätare: <strong style="color:var(--text2)">'+v.odometer.toLocaleString('sv-SE')+' km</strong>'+(v.owner?' · '+v.owner:'')+'</div></div><button class="del-btn" onclick="deleteVehicle(\''+v.id+'\')"><svg width="16" height="16"><use href="#ic-trash"/></svg></button></div></div>';}).join('');}
+function showAddVehicle(){document.getElementById('add-vehicle-form').style.display='block';document.getElementById('add-vehicle-btn').style.display='none';}
+function hideAddVehicle(){document.getElementById('add-vehicle-form').style.display='none';document.getElementById('add-vehicle-btn').style.display='flex';['v-reg','v-make','v-model','v-year','v-odo','v-owner'].forEach(function(id){document.getElementById(id).value='';});}
+function addVehicle(){var reg=document.getElementById('v-reg').value.trim().toUpperCase();var make=document.getElementById('v-make').value.trim();var model=document.getElementById('v-model').value.trim();var year=document.getElementById('v-year').value;var type=document.getElementById('v-type').value;var fuel=document.getElementById('v-fuel').value;var odo=parseFloat(document.getElementById('v-odo').value);var owner=document.getElementById('v-owner').value.trim();if(!reg){toast('Ange registreringsnummer');return;}if(!make){toast('Ange märke');return;}if(!model){toast('Ange modell');return;}if(isNaN(odo)||odo<0){toast('Ange mätarställning');return;}if(S.vehicles.find(function(v){return v.reg===reg;})){toast('Reg.nr finns redan');return;}var v={id:Date.now().toString(),reg:reg,make:make,model:model,year:year,type:type,fuel:fuel,odometer:odo,owner:owner};S.vehicles.push(v);if(!S.selId)S.selId=v.id;scheduleSave();hideAddVehicle();renderVehicles();renderChips();toast('Fordon tillagt');}
+function deleteVehicle(id){if(S.driving&&S.selId===id){toast('Kan ej ta bort under körning');return;}if(!confirm('Ta bort fordonet?'))return;S.vehicles=S.vehicles.filter(function(v){return v.id!==id;});if(S.selId===id)S.selId=S.vehicles.length?S.vehicles[0].id:null;scheduleSave();renderVehicles();renderChips();toast('Fordon borttaget');}
+
+function setFilter(f,el){S.filter=f;document.querySelectorAll('.filter-chip').forEach(function(c){c.classList.remove('active');});el.classList.add('active');renderLogs();}
+function renderLogs(){
+  var el=document.getElementById('logs-list');
+  var list=S.filter==='all'?S.trips:S.trips.filter(function(t){return t.purpose===S.filter;});
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon"><svg width="44" height="44" style="color:var(--text3)"><use href="#ic-log"/></svg></div><div style="font-size:15px;font-weight:600">Inga körningar ännu</div></div>';return;}
+  el.innerHTML=list.map(function(t){
+    var isBiz=t.purpose==='business';
+    var tc=isBiz?'var(--green)':'var(--amber)';var tb=isBiz?'var(--green-bg)':'var(--amber-bg)';var tl=isBiz?'Tjänst':'Privat';
+    return'<div class="card"><div class="log-header"><div class="log-date">'+t.date+' &nbsp;'+t.startTime+'–'+t.endTime+'</div><div class="log-dist">'+t.distance.toFixed(2)+' km</div></div><div class="log-route"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+t.from+'</span><svg width="14" height="14" style="color:var(--text3);flex-shrink:0"><use href="#ic-arrow-right"/></svg><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right">'+t.to+'</span></div><div class="log-tags"><span class="tag" style="background:'+tb+';color:'+tc+'">'+tl+'</span><span class="tag" style="background:var(--accent-bg);color:var(--accent)">'+t.vehicleReg+'</span><span class="tag" style="background:var(--surface2);color:var(--text2)">'+t.driver+'</span>'+(t.purposeDetail?'<span class="tag" style="background:var(--surface2);color:var(--text2)">'+t.purposeDetail+'</span>':'')+'</div></div>';
+  }).join('');
+}
+
+function exportCSV(){if(!S.trips.length){toast('Inga körningar att exportera');return;}var H=['Datum','Starttid','Sluttid','Förare','Reg.nr','Fordon','Från','Till','Ändamål','Beskrivning','Mätare start','Mätare slut','Distans km','Passagerare'];var R=S.trips.map(function(t){return[t.date,t.startTime,t.endTime,t.driver,t.vehicleReg,t.vehicleMake,t.from,t.to,t.purpose==='business'?'Tjänstekörning':'Privat',t.purposeDetail||'',t.odoStart,t.odoEnd,t.distance,t.passengers];});var csv=[H].concat(R).map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(';');}).join('\n');var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));a.download='korlogg_'+new Date().toISOString().slice(0,10)+'.csv';a.click();toast('CSV exporterad');}
+
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});}
+
+window.onload=function(){
+  renderLoginScreen();
+  var lastId=getLastUser();
+  var users=getLocalUsers();
+  if(lastId){var u=users.find(function(x){return x.uid===lastId;});if(u){loginWithId(u.uid,u.name);return;}}
+};
+</script>
+</body>
+</html>
